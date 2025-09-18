@@ -7,6 +7,9 @@ import { DEV_MINI_SECRET, ss58Address } from '@polkadot-labs/hdkd-helpers'
 import { getPolkadotSigner } from 'polkadot-api/signer'
 import assert from 'assert'
 
+import { defaultLogger } from '@acala-network/chopsticks'
+defaultLogger.level = 'error'
+
 export async function setupTestNetwork(overrides?: {
   relay?: Record<string, unknown>
   assetHub?: Record<string, unknown>
@@ -20,19 +23,19 @@ export async function setupTestNetwork(overrides?: {
     polkadot: {
       endpoint: 'wss://westend-rpc.n.dwellir.com',
       port: RELAY_PORT,
-      'runtime-log-level': 5,
+      'runtime-log-level': 1,
       ...overrides?.relay,
     },
     assetHub: {
       endpoint: 'wss://asset-hub-westend-rpc.n.dwellir.com',
       port: ASSET_HUB_PORT,
-      'runtime-log-level': 5,
+      'runtime-log-level': 1,
       ...overrides?.assetHub,
     },
     penpal: {
       endpoint: 'wss://westend-penpal-rpc.polkadot.io',
       port: PENPAL_PORT,
-      'runtime-log-level': 5,
+      'runtime-log-level': 1,
       ...overrides?.penpal,
     },
   })

@@ -9,19 +9,20 @@ import {
   XcmV5WildAsset,
   XcmVersionedXcm,
 } from '@polkadot-api/descriptors'
-import { FixedSizeBinary, PolkadotSigner } from 'polkadot-api'
+import { FixedSizeBinary } from 'polkadot-api'
 import { getXcmLocationForRoute } from '@xcm/xcm-utils.js'
 import { ChainDefinition, ParachainDefinition } from '@chains/chain-types.js'
-import { logger } from '@logging/logger.js'
 
-export async function xcmTransferViaTransferAssetsUsingTypeAndThen({
+export type TransferViaTransferAssetsUsingTypeAndThen = Awaited<
+  ReturnType<ParachainDefinition['api']['tx']['PolkadotXcm']['transfer_assets_using_type_and_then']>
+>
+export function xcmTransferViaTransferAssetsUsingTypeAndThen({
   source,
   reserve,
   dest,
   assets,
   assetToTransfer,
   beneficiaryAccountId,
-  signer,
 }: {
   source: ParachainDefinition
   reserve: ChainDefinition
@@ -29,8 +30,7 @@ export async function xcmTransferViaTransferAssetsUsingTypeAndThen({
   assets: Extract<XcmVersionedAssets, { type: 'V5' }>
   assetToTransfer: Extract<XcmVersionedAsset, { type: 'V5' }>
   beneficiaryAccountId: Uint8Array<ArrayBufferLike>
-  signer: PolkadotSigner
-}) {
+}): TransferViaTransferAssetsUsingTypeAndThen {
   const extrinsic = source.api.tx.PolkadotXcm.transfer_assets_using_type_and_then({
     dest: getXcmLocationForRoute(source, dest),
     assets,
@@ -62,11 +62,5 @@ export async function xcmTransferViaTransferAssetsUsingTypeAndThen({
       value: undefined,
     },
   })
-
-  const result = await extrinsic.signAndSubmit(signer)
-
-  if (!result.ok) {
-    logger.error({ result }, 'Extrinsic submission failed')
-    throw new Error('XCM transfer extrinsic failed')
-  }
+  return extrinsic
 }

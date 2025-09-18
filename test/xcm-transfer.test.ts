@@ -16,8 +16,16 @@ import {
 } from '@polkadot-api/descriptors'
 import assert from 'assert'
 import { setupTestNetwork } from '@test/utils/setupTestNetwork.js'
+import { ChainDefinition } from '@chains/chain-types.js'
+import { logger } from '@logging/logger.js'
 
-test('executes xcm transfer via selected reserve', { timeout: 6000 * 1000 }, async () => {
+const CASES = [
+  ['Penpal (TQ=y, DR=y, SA=y)', 'test/wasms/penpal_dry_run+trusted_query.wasm'],
+  ['Penpal (TQ=y, DR=n, SA=y)', 'test/wasms/penpal_trusted_query.wasm'],
+  ['Penpal (TQ=n, DR=n, SA=y)', 'test/wasms/penpal.wasm'],
+] as const
+
+test.each(CASES)('%s', { timeout: 6000 * 1000 }, async (_, wasmPath) => {
   const {
     penpal,
     assetHub,
@@ -30,7 +38,7 @@ test('executes xcm transfer via selected reserve', { timeout: 6000 * 1000 }, asy
     aliceSigner,
     bobKeyPair,
   } = await setupTestNetwork({
-    penpal: { "wasm-override": "test/wasms/penpal.wasm" },
+    penpal: { 'wasm-override': wasmPath },
   })
 
   const amountToTransfer = WND(10)
@@ -39,9 +47,7 @@ test('executes xcm transfer via selected reserve', { timeout: 6000 * 1000 }, asy
     fun: XcmV3MultiassetFungibility.Fungible(amountToTransfer),
   })
 
-  // pre-fund Alice account with:
-  // 1. Penpal native token (PEN)
-  // 2. WND (relay token) which is a ForeginAsset for Penpal
+  // Pre-fund Alice
   await penpal.dev.setStorage({
     System: { account: [[[aliceSS58], { providers: 1, data: { free: WND(100_000) } }]] },
     ForeignAssets: {
@@ -58,7 +64,8 @@ test('executes xcm transfer via selected reserve', { timeout: 6000 * 1000 }, asy
       ],
     },
   })
-  // pre-fund Soverign Account of Penpal on Asset-Hub to be able to accept the transfer
+
+  // Pre-fund Sovereign Account
   const penpalSovereignAccountOnAssetHub = await getSovereignAccountAddressFor(
     assetHubChain.api,
     getXcmLocationForRoute(assetHubChain, penpalChain)
@@ -74,40 +81,39 @@ test('executes xcm transfer via selected reserve', { timeout: 6000 * 1000 }, asy
   advanceNetwork()
 
   const possibleReserves = [assetHubChain, relayChain]
-
   const assets = XcmVersionedAssets.V5([assetToTransfer.value])
+
+  const extrinsicToSubmitBuilder = (reserve: ChainDefinition) =>
+    xcmTransferViaTransferAssetsUsingTypeAndThen({
+      source: penpalChain,
+      reserve,
+      dest: penpalChain,
+      assets,
+      assetToTransfer,
+      beneficiaryAccountId: accountId(bobKeyPair.publicKey),
+    })
 
   const reserves = await filterPossibleReserves(
     possibleReserves,
     penpalChain,
+    penpalChain,
     assetToTransfer,
-    amountToTransfer
+    amountToTransfer,
+    extrinsicToSubmitBuilder,
+    aliceSS58
   )
+  logger.info({ reserves: reserves.map((x) => x.name) }, 'Found possible reserves')
   expect(reserves.length).toBeGreaterThan(0)
   assert(reserves[0])
 
   const bobBalanceBefore = await getAssetBalanceOnChain(penpalChain, assetToTransfer, bobSS58)
 
-  // sending from Penpal Alice via reserve to Penpal Bob
-  // Penpal -> reserve chain -> Penpal while non-practical
-  // is legit. Also not much choice since Westend
-  // doesn't have any other non-system chain live than Penpal
-  await xcmTransferViaTransferAssetsUsingTypeAndThen({
-    source: penpalChain,
-    reserve: reserves[0],
-    dest: penpalChain,
-    assets,
-    assetToTransfer: assetToTransfer,
-    beneficiaryAccountId: accountId(bobKeyPair.publicKey),
-    signer: aliceSigner,
-  })
+  const result = await extrinsicToSubmitBuilder(reserves[0]).signAndSubmit(aliceSigner)
+  expect(result.ok).toBe(true)
 
   await advanceNetwork()
 
   const bobBalanceAfter = await getAssetBalanceOnChain(penpalChain, assetToTransfer, bobSS58)
 
-  // we expect Bob's balance for WND to increase by (amountToTransfer - fees)
-  // since we don't bother with calculating fees for this example so just check it
-  // actually increased
   expect(bobBalanceBefore).toBeLessThan(bobBalanceAfter)
 })

@@ -21,7 +21,7 @@
       "@xcm/*": ["xcm/*"],
       "@runtime/*": ["runtime-support/*"],
       "@logging/*": ["logging/*"],
-      "@test/*": ["test/*"],
+      "@test/*": ["test/*"]
     }
   },
   "include": ["chains", "xcm", "runtime-support", "logging", "test"]

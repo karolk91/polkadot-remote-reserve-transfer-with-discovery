@@ -3,11 +3,18 @@ import {
   XcmV5Instruction,
   XcmV3WeightLimit,
   XcmVersionedXcm,
+  DispatchRawOrigin,
 } from '@polkadot-api/descriptors'
-import { ChainDefinition } from '@chains/chain-types.js'
+import { ChainDefinition, ParachainDefinition } from '@chains/chain-types.js'
 import { getNetworkTokenLocationFor, getXcmLocationForRoute } from '@xcm/xcm-utils.js'
-import { checkRuntimeSupportsApiWithVersion, WANTED_DRY_RUN_API } from '@runtime/runtime-api-checks.js'
+import {
+  checkRuntimeSupportsApiWithVersion,
+  WANTED_DRY_RUN_API,
+} from '@runtime/runtime-api-checks.js'
 import { logger } from '@logging/logger.js'
+import { TransferViaTransferAssetsUsingTypeAndThen } from '@xcm/send-transfer.js'
+import { SS58String } from 'polkadot-api'
+import { isEqual } from 'lodash'
 
 export async function passesMinimalDryRunCheck(
   source: ChainDefinition,
@@ -49,27 +56,76 @@ export async function passesMinimalDryRunCheck(
   return passed
 }
 
+function findForwardedXcm(
+  forwardedXcms: [unknown, XcmVersionedXcm[] | undefined][],
+  expectedLocation: unknown
+): XcmVersionedXcm | null {
+  const found = forwardedXcms.find(([location]) => isEqual(location, expectedLocation))
+  if (!found) return null
+
+  const [, messages] = found
+  return messages && messages.length > 0 ? messages[0]! : null
+}
+
 export async function passesFullDryRunCheck(
-  source: ChainDefinition,
+  source: ParachainDefinition,
   reserve: ChainDefinition,
-  amount: bigint
+  dest: ChainDefinition,
+  extrinsicBuilder: (reserve: ChainDefinition) => TransferViaTransferAssetsUsingTypeAndThen,
+  origin: SS58String
 ): Promise<boolean> {
-  const srcSupport = await checkRuntimeSupportsApiWithVersion(
-    source.client,
-    WANTED_DRY_RUN_API.name,
-    WANTED_DRY_RUN_API.ver
+  const [sourceSupport, reserveSupport, destSupport] = await Promise.all([
+    checkRuntimeSupportsApiWithVersion(
+      source.client,
+      WANTED_DRY_RUN_API.name,
+      WANTED_DRY_RUN_API.ver
+    ),
+    checkRuntimeSupportsApiWithVersion(
+      reserve.client,
+      WANTED_DRY_RUN_API.name,
+      WANTED_DRY_RUN_API.ver
+    ),
+    checkRuntimeSupportsApiWithVersion(
+      dest.client,
+      WANTED_DRY_RUN_API.name,
+      WANTED_DRY_RUN_API.ver
+    ),
+  ])
+
+  if (!(sourceSupport && reserveSupport && destSupport)) {
+    logger.warn({ sourceSupport, reserveSupport, destSupport }, 'Full dry-run not supported')
+    return false
+  }
+
+  const sourceResult = await source.api.apis.DryRunApi.dry_run_call(
+    { type: 'system', value: DispatchRawOrigin.Signed(origin) },
+    extrinsicBuilder(reserve).decodedCall,
+    5
   )
-  const resSupport = await checkRuntimeSupportsApiWithVersion(
-    reserve.client,
-    WANTED_DRY_RUN_API.name,
-    WANTED_DRY_RUN_API.ver
+  if (!sourceResult.success) return false
+
+  const firstHop = findForwardedXcm(
+    sourceResult.value.forwarded_xcms ?? [],
+    getXcmLocationForRoute(source, reserve)
+  )
+  if (!firstHop) return false
+
+  const reserveResult = await reserve.api.apis.DryRunApi.dry_run_xcm(
+    getXcmLocationForRoute(reserve, source),
+    firstHop
+  )
+  if (!reserveResult.success) return false
+
+  const secondHop = findForwardedXcm(
+    reserveResult.value.forwarded_xcms ?? [],
+    getXcmLocationForRoute(reserve, dest)
+  )
+  if (!secondHop) return false
+
+  const destResult = await dest.api.apis.DryRunApi.dry_run_xcm(
+    getXcmLocationForRoute(dest, reserve),
+    secondHop
   )
 
-  const possible = srcSupport && resSupport
-  logger.debug({ srcSupport, resSupport }, 'Full dry-run support')
-
-  if (!possible) return false
-
-  // TODO: implement real full dry-run logic
-  return false
+  return destResult.success
 }

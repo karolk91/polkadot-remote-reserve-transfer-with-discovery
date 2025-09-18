@@ -31,7 +31,7 @@
     "postinstall": "if [ -z \"$PAPI_DONE\" ]; then export PAPI_DONE=1 && papi && yarn add @polkadot-api/descriptors@file:.papi/descriptors; fi",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "CI=1 yarn vitest --run",
+    "test": "yarn vitest --run",
     "format": "prettier --check .",
     "format:fix": "prettier --write ."
   }
