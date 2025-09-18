@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@chains/*": ["chains/*"],
+      "@xcm/*": ["xcm/*"],
+      "@runtime/*": ["runtime-support/*"],
+      "@logging/*": ["logging/*"],
+      "@test/*": ["test/*"],
+    }
+  },
+  "include": ["chains", "xcm", "runtime-support", "logging", "test"]
+}
