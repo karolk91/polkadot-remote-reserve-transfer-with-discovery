@@ -28,6 +28,7 @@
     "vite-tsconfig-paths": "^5.1.3"
   },
   "scripts": {
+    "postinstall": "papi",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "CI=1 yarn vitest --run",

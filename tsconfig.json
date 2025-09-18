@@ -22,6 +22,7 @@
       "@runtime/*": ["runtime-support/*"],
       "@logging/*": ["logging/*"],
       "@test/*": ["test/*"],
+      "@polkadot-api/descriptors/*": [".papi/descriptors/*"],
     }
   },
   "include": ["chains", "xcm", "runtime-support", "logging", "test"]
