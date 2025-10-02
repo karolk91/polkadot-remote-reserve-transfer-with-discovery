@@ -8,14 +8,14 @@
   "dependencies": {
     "@acala-network/chopsticks-testing": "^1.2.2",
     "@polkadot-api/descriptors": "file:.papi/descriptors",
-    "@polkadot-labs/hdkd": "^0.0.10",
-    "@polkadot-labs/hdkd-helpers": "^0.0.10",
+    "@polkadot-labs/hdkd": "^0.0.25",
+    "@polkadot-labs/hdkd-helpers": "^0.0.26",
     "polkadot-api": "^1.14.1",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.4"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.20",
-    "@types/node": "^22.15.21",
+    "@types/node": "^24.6.2",
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
     "eslint": "^9.35.0",
@@ -31,7 +31,7 @@
     "postinstall": "if [ -z \"$PAPI_DONE\" ]; then export PAPI_DONE=1 && papi && yarn add @polkadot-api/descriptors@file:.papi/descriptors; fi",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "yarn vitest --run",
+    "test": "yarn vitest --run --reporter=verbose",
     "format": "prettier --check .",
     "format:fix": "prettier --write ."
   }

@@ -57,6 +57,7 @@ As such, this project proposes and implements as a Proof of Concept, an algorith
       1. Then, for source chain, check if its Soverign Account balance on the reserve chain has enough funds to cover the amount of asset of the transfer in question. This can be achieved by utlizing [`LocationToAccount`](https://chains.papi.how/westend_asset_hub/modules/RuntimeCalls.LocationToAccountApi.html) API to find out the SS58 Address of the Sovereign Account and then read its balance
          1. If balance is not enough, the transfer will fail, eliminate this reserve from final list
       1. As final elimination step, knowing that possible reserve chains (Asset Hub and Relay Chain) support `DryRunApi`, its possible to prepare minimal XCM program that resembles real scenario to verify any other issue. Minimal XCM program is defined as below, and the origin sending this XCM is set to the source chain:
+
          ```
          const xcm = XcmVersionedXcm.V5([
              XcmV5Instruction.WithdrawAsset([asset]),
@@ -68,4 +69,5 @@ As such, this project proposes and implements as a Proof of Concept, an algorith
          ```
 
          1. If dry-run of the XCM above result is not succesfull, eliminate reserve in-check from the final list
+
 1. At this point, the final possible reserve list contains either single entry due to the full-dry run check, or there can be multiple entries that survived the elimination steps above. There is still no 100% guarantee that the transfer will work, but chances to fail are greatly reduced
