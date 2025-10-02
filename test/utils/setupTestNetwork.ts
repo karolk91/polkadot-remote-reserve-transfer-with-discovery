@@ -23,16 +23,22 @@ export async function setupTestNetwork(overrides?: {
       endpoint: 'wss://westend-rpc.n.dwellir.com',
       'runtime-log-level': 1,
       ...overrides?.relay,
+      timeout: 999999999999,
+      'rpc-timeout': 999999999999,
     },
     assetHub: {
       endpoint: 'wss://asset-hub-westend-rpc.n.dwellir.com',
       'runtime-log-level': 1,
       ...overrides?.assetHub,
+      timeout: 999999999999,
+      'rpc-timeout': 999999999999,
     },
     penpal: {
       endpoint: 'wss://westend-penpal-rpc.polkadot.io',
       'runtime-log-level': 1,
       ...overrides?.penpal,
+      timeout: 999999999999,
+      'rpc-timeout': 999999999999,
     },
   })
 

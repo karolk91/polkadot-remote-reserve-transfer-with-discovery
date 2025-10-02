@@ -1,4 +1,4 @@
-import { ChainDefinition, ParachainDefinition, RelayDefinition } from '@chains/chain-types.js'
+import { ChainDefinition, RelayDefinition } from '@chains/chain-types.js'
 import { CompatibilityLevel } from 'polkadot-api'
 
 export async function passesMigrationNotInProgressCheck(
@@ -17,19 +17,6 @@ export async function passesMigrationNotInProgressCheck(
         return false // Migration is in progress on this chain, do not use as reserve
       }
     } // else RcMigrator not supported, means no migration can happen
-  } else {
-    if (
-      await (reserve as ParachainDefinition).api.query.AhMigrator.AhMigrationStage.isCompatible(
-        CompatibilityLevel.Identical
-      )
-    ) {
-      const migrationStatus = await (
-        reserve as ParachainDefinition
-      ).api.query.AhMigrator.AhMigrationStage.getValue()
-      if (migrationStatus.type != 'Pending' && migrationStatus.type != 'MigrationDone') {
-        return false // Migration is in progress on this chain, do not use as reserve
-      }
-    } // else AhMigrator not supported, means no migration can happen
   }
   return true
 }

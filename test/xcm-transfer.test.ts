@@ -32,7 +32,7 @@ type ReserveTestCase = {
 
 const CASES: ReserveTestCase[] = [
   {
-    name: 'Penpal (TQ=y, DR=y), Migration In progress, Expecting no possible reserves',
+    name: 'Penpal (TQ=y, DR=y), Migration In progress, SA on AH has funds, expecting only AH as possible reserve',
     penpalWasmPath: 'test/wasms/penpal_dry_run+trusted_query.wasm',
     relayWasmPath: 'test/wasms/westend_relay+rcMigrator.wasm',
     assetHubWasmPath: 'test/wasms/westend_asset_hub+AhMigrator.wasm',
@@ -40,6 +40,17 @@ const CASES: ReserveTestCase[] = [
     migrationInProgress: true,
     sovOnRelayHasFunds: true,
     sovOnAhHasFunds: true,
+    expectedReserves: ['AssetHub'],
+  },
+  {
+    name: 'Penpal (TQ=y, DR=y), Migration In progress, SA on Relay has funds, Expecting no possible reserves',
+    penpalWasmPath: 'test/wasms/penpal_dry_run+trusted_query.wasm',
+    relayWasmPath: 'test/wasms/westend_relay+rcMigrator.wasm',
+    assetHubWasmPath: 'test/wasms/westend_asset_hub+AhMigrator.wasm',
+    migrationSupported: true,
+    migrationInProgress: true,
+    sovOnRelayHasFunds: true,
+    sovOnAhHasFunds: false,
     expectedReserves: [],
   },
   {
@@ -132,7 +143,7 @@ const CASES: ReserveTestCase[] = [
   },
 ]
 
-test.concurrent.each(CASES)('$name', { timeout: 300 * 1000 }, async (tc) => {
+test.concurrent.each(CASES)('$name', { timeout: 300000 * 1000 }, async (tc) => {
   const {
     penpalWasmPath,
     relayWasmPath,

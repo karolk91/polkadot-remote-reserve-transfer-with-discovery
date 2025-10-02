@@ -42,10 +42,9 @@ As such, this project proposes and implements as a Proof of Concept, an algorith
 
 1. The idea is to figure out final list of possible reserves
 1. Start with full list (Asset Hub, Relay Chain) and for every possible reserve chain:
-   1. Verify if Asset Hub Migration is in progress - if yes, it means both possible reserves (Asset Hub and Relay Chain) cannot be used
-      1. Verification is done via:
-         1. Making sure that `RcMigrator` and `AhMigrator` pallets are present, if not, then no migration is happening
-         1. If pallets are present, query storage `RcMigrator.RcMigrationStage` and `AhMigrator.AhMigrationStage`, any value other than `Pending` or `MigrationDone` means that migration is in progress
+   1. Verify if Asset Hub Migration is in progress - if yes, it means that Relay Chain is currently migrating and cannot be used as reserve. Asset Hub can be considered a possible reserve at this point, but this will depend upon further checks (if eg. Sovereign Accounts were already migrated)
+      1. Make sure that `RcMigrator` pallet is present on Relay Chain, if not, then no migration is happening and Relay Chain can be considered a possible reserve
+      1. If pallet is present, query storage `RcMigrator.RcMigrationStage` -> any value other than `Pending` or `MigrationDone` means that migration is in progress and Relay Chain should be eliminated from final possible reserve list
    1. Verify if all the participating chains (the triple), implement [`DryRunApi`](https://chains.papi.how/polkadot_asset_hub/modules/RuntimeCalls.DryRunApi.html). If yes, then execute full path of dry-runs, starting on the source chain, through reserve and destination chain. Set of supported APIs can be retrieved via [`state_getRuntimeVersion`](https://polkadot.js.org/docs/polkadot/rpc/#getruntimeversionat-blockhash-runtimeversion) RPC API
       1. Having full dry-run succesful result, ensures everything is in place for transfer to succeed.
       1. If dry-run result is not succesful, try with another reserve.
