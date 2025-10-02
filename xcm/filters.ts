@@ -5,6 +5,7 @@ import { passesMinimalDryRunCheck, passesFullDryRunCheck } from '@runtime/dryrun
 import { hasEnoughFundsOnSovereignAccount } from '@xcm/xcm-utils.js'
 import { TransferViaTransferAssetsUsingTypeAndThen } from './send-transfer.js'
 import { SS58String } from 'polkadot-api'
+import { passesMigrationNotInProgressCheck } from '@runtime/asset-hub-migration.js'
 
 async function filterAsync<T>(array: T[], predicate: (item: T) => Promise<boolean>): Promise<T[]> {
   const results = await Promise.all(array.map(predicate))
@@ -20,14 +21,18 @@ export async function filterPossibleReserves(
   extrinsicBuilder: (reserve: ChainDefinition) => TransferViaTransferAssetsUsingTypeAndThen,
   origin: SS58String
 ): Promise<ChainDefinition[]> {
-  for (const reserve of reserves) {
+  let stillPossible = reserves
+
+  stillPossible = await filterAsync(stillPossible, (reserve) =>
+    passesMigrationNotInProgressCheck(reserve)
+  )
+
+  for (const reserve of stillPossible) {
     // as soon as we find any reserve that passes full dry-run path, we choose this reserve
     if (await passesFullDryRunCheck(source, reserve, dest, extrinsicBuilder, origin)) {
       return [reserve]
     }
   }
-
-  let stillPossible = reserves
 
   stillPossible = await filterAsync(stillPossible, (reserve) =>
     passesTrustedQueryCheck(source, reserve, dest, assetToTransfer)

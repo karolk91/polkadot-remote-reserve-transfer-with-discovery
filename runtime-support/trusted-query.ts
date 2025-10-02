@@ -5,7 +5,6 @@ import {
   checkRuntimeSupportsApiWithVersion,
   WANTED_TRUSTED_QUERY_API,
 } from '@runtime/runtime-api-checks.js'
-import { logger } from '@logging/logger.js'
 
 export async function passesTrustedQueryCheck(
   source: ChainDefinition,
@@ -24,8 +23,6 @@ export async function passesTrustedQueryCheck(
     WANTED_TRUSTED_QUERY_API.ver
   )
 
-  logger.debug({ source: source.name, sourceSupports }, 'TrustedQuery support')
-
   if (!sourceSupports) return true
 
   const resultSource = await source.api.apis.TrustedQueryApi.is_trusted_reserve(
@@ -40,9 +37,6 @@ export async function passesTrustedQueryCheck(
       getXcmLocationForRoute(source, reserve)
     )
   }
-
-  logger.debug({ resultSource, reserve: reserve.name }, 'TrustedQuery result')
-  logger.debug({ resultSource, reserve: reserve.name }, 'TrustedQuery result')
 
   // Check if source chain supports TrustedQuery, and if the result of the check for reserve is true
   // Also check if destination chain supports TrustedQuery, and allow case when TrustedQuery is not supported, or the result of

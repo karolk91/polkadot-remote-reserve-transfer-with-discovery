@@ -11,7 +11,6 @@ import {
   checkRuntimeSupportsApiWithVersion,
   WANTED_DRY_RUN_API,
 } from '@runtime/runtime-api-checks.js'
-import { logger } from '@logging/logger.js'
 import { TransferViaTransferAssetsUsingTypeAndThen } from '@xcm/send-transfer.js'
 import { SS58String } from 'polkadot-api'
 import { isEqual } from 'lodash'
@@ -48,10 +47,6 @@ export async function passesMinimalDryRunCheck(
   )
 
   const passed = result.success && result.value.execution_result.type === 'Complete'
-
-  if (!passed) {
-    logger.warn({ result, reserve: reserve.name }, 'Minimal dry-run failed')
-  }
 
   return passed
 }
@@ -93,7 +88,6 @@ export async function passesFullDryRunCheck(
   ])
 
   if (!(sourceSupport && reserveSupport && destSupport)) {
-    logger.warn({ sourceSupport, reserveSupport, destSupport }, 'Full dry-run not supported')
     return false
   }
 
@@ -110,7 +104,7 @@ export async function passesFullDryRunCheck(
   )
   if (!firstHop) return false
 
-  const reserveResult = await reserve.api.apis.DryRunApi.dry_run_xcm(
+  const reserveResult = await reserve.unsafeApi.apis.DryRunApi.dry_run_xcm(
     getXcmLocationForRoute(reserve, source),
     firstHop
   )

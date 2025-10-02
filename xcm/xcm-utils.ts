@@ -7,7 +7,7 @@ import {
   westend_asset_hub,
 } from '@polkadot-api/descriptors'
 import { ChainDefinition, ParachainDefinition, RoutingData } from '@chains/chain-types.js'
-import { SS58String, UnsafeApi } from 'polkadot-api'
+import { SS58String, TypedApi } from 'polkadot-api'
 
 export const WND = (x: number) => BigInt(x) * BigInt(1e12)
 
@@ -47,7 +47,7 @@ export function getNetworkTokenLocationFor(chain: RoutingData) {
 }
 
 export async function getSovereignAccountAddressFor(
-  api: UnsafeApi<typeof westend_relay | typeof westend_asset_hub>,
+  api: TypedApi<typeof westend_relay | typeof westend_asset_hub>,
   location: XcmVersionedLocation
 ): Promise<string> {
   const result = await api.apis.LocationToAccountApi.convert_location(location)

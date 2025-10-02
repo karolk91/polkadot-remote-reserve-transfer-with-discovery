@@ -5,7 +5,10 @@ import { ParachainDefinition, RelayDefinition } from '@chains/chain-types.js'
 import { sr25519CreateDerive } from '@polkadot-labs/hdkd'
 import { DEV_MINI_SECRET, ss58Address } from '@polkadot-labs/hdkd-helpers'
 import { getPolkadotSigner } from 'polkadot-api/signer'
+
 import assert from 'assert'
+
+import { westend_asset_hub, westend_relay } from '@polkadot-api/descriptors'
 
 import { defaultLogger } from '@acala-network/chopsticks'
 defaultLogger.level = 'error'
@@ -15,26 +18,19 @@ export async function setupTestNetwork(overrides?: {
   assetHub?: Record<string, unknown>
   penpal?: Record<string, unknown>
 }) {
-  const RELAY_PORT = 8000
-  const ASSET_HUB_PORT = 8001
-  const PENPAL_PORT = 8002
-
   const { polkadot, assetHub, penpal } = await setupNetworks({
     polkadot: {
       endpoint: 'wss://westend-rpc.n.dwellir.com',
-      port: RELAY_PORT,
       'runtime-log-level': 1,
       ...overrides?.relay,
     },
     assetHub: {
       endpoint: 'wss://asset-hub-westend-rpc.n.dwellir.com',
-      port: ASSET_HUB_PORT,
       'runtime-log-level': 1,
       ...overrides?.assetHub,
     },
     penpal: {
       endpoint: 'wss://westend-penpal-rpc.polkadot.io',
-      port: PENPAL_PORT,
       'runtime-log-level': 1,
       ...overrides?.penpal,
     },
@@ -53,19 +49,22 @@ export async function setupTestNetwork(overrides?: {
   }
 
   const relayChain = createChainDefinition(
-    'Westend Relay',
-    `ws://localhost:${RELAY_PORT}`
+    'Relay',
+    polkadot.ws.endpoint,
+    westend_relay
   ) as RelayDefinition
 
   const assetHubChain = createChainDefinition(
     'AssetHub',
-    `ws://localhost:${ASSET_HUB_PORT}`,
+    assetHub.ws.endpoint,
+    westend_asset_hub,
     1000
   ) as ParachainDefinition
 
   const penpalChain = createChainDefinition(
     'Penpal',
-    `ws://localhost:${PENPAL_PORT}`,
+    penpal.ws.endpoint,
+    westend_asset_hub,
     2042
   ) as ParachainDefinition
 

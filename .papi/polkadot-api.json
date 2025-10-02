@@ -9,15 +9,17 @@
     },
     "westend_asset_hub": {
       "wsUrl": "wss://westend-asset-hub-rpc.polkadot.io",
+      "at": "11922463",
       "metadata": ".papi/metadata/westend_asset_hub.scale",
       "genesis": "0x67f9723393ef76214df0118c34bbbd3dbebc8ed46a10973a8c969d48fe7598c9",
-      "codeHash": "0x316c9a0415aeefd1bce69b48dfaf3e335729bfe157b7b1c464dbe4955ceca865"
+      "codeHash": "0xea48eb5d470eeed502367c7801f11bb8d262bf31c7fa3dca1eebae1c72d41a46"
     },
     "westend_relay": {
       "wsUrl": "wss://westend-rpc.polkadot.io",
+      "at": "26071771",
       "metadata": ".papi/metadata/westend_relay.scale",
       "genesis": "0xe143f23803ac50e8f6f8e62695d1ce9e4e1d68aa36c1cd2cfd15340213f3423e",
-      "codeHash": "0x5a55dfc559c7e8f6a475e413cb5ca85b7dd8d167df5dc402c0705a042b473343"
+      "codeHash": "0x8579da39311d91d4fd5586caee968fa2f2de07db6f715126cc438c79c2f18c3d"
     }
   }
 }
